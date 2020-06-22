@@ -1,4 +1,4 @@
-# SDP MINI breakout board firmware change to work with HUB Motor setup
+# SDP MINI firmware changes to work with HUB Motor base
 
 We changed our breakout(v6) board firmware to work with ZLAC706 servo motor controllers. Motor controller requests STEP/DIR type of input while the out of the box firware outputs 2 PWM signals for forward and backward control. Aim is to convert the signal types for accurate speed control.
 
