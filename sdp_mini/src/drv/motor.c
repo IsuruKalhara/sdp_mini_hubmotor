@@ -45,8 +45,8 @@
  */
 static motor_cfg_t _motor_cfg[] = {
     {   /**< Left walking motor configure. */
-        {MOTO_LF_PWM_PORT, MOTO_LF_PWM_PIN, MOTO_LF_PWM, MOTO_LF_PWM_CHN},
-        {MOTO_LB_PWM_PORT, MOTO_LB_PWM_PIN, MOTO_LB_PWM, MOTO_LB_PWM_CHN},
+        {MOTO_L_PWM_PORT, MOTO_L_PWM_PIN, MOTO_L_PWM, MOTO_L_PWM_CHN},
+        {MOTO_L_DIR_PORT, MOTO_L_DIR_PIN, LOW},
         {NULL, 0, LOW},
         {
             {ENCODER_L1_PORT, ENCODER_L1_PIN, ENCODER_L1_EXTI},
@@ -56,8 +56,8 @@ static motor_cfg_t _motor_cfg[] = {
     },
 
     {   /**< Right walking motor configure. */
-        {MOTO_RF_PWM_PORT, MOTO_RF_PWM_PIN, MOTO_RF_PWM, MOTO_RF_PWM_CHN},
-        {MOTO_RB_PWM_PORT, MOTO_RB_PWM_PIN, MOTO_RB_PWM, MOTO_RB_PWM_CHN},
+        {MOTO_R_PWM_PORT, MOTO_R_PWM_PIN, MOTO_R_PWM, MOTO_R_PWM_CHN},
+        {MOTO_R_DIR_PORT, MOTO_R_DIR_PIN, LOW},
         {NULL, 0, LOW},
         {
             {ENCODER_R1_PORT, ENCODER_R1_PIN, ENCODER_R1_EXTI},
@@ -115,18 +115,22 @@ static void _init_motor_pwm(const pwm_port_t *pwm)
     TIM_Cmd(pwm->tim, DISABLE);
 
     /* Initialize motor control pwm. */
-    tim_base.TIM_Period = (CONFIG_MOTOR_PWM_PERIOD - 1);
-    tim_base.TIM_Prescaler = 0;
+    tim_base.TIM_Period = 0;//(CONFIG_MOTOR_PWM_PERIOD - 1);
+    tim_base.TIM_Prescaler = 72;
     tim_base.TIM_ClockDivision = TIM_CKD_DIV1;
     tim_base.TIM_CounterMode = TIM_CounterMode_Up;
 
     TIM_TimeBaseInit(pwm->tim, &tim_base);
 
     /* Motor PWM ouput channel configure. */
-    tim_oc.TIM_OCMode      = TIM_OCMode_PWM2;
+    tim_oc.TIM_OCMode      = TIM_OCMode_PWM1;
     tim_oc.TIM_OutputState = TIM_OutputState_Enable;
-    tim_oc.TIM_Pulse       = CONFIG_MOTOR_PWM_PERIOD;
-    tim_oc.TIM_OCPolarity  = TIM_OCPolarity_Low;
+    tim_oc.TIM_OutputNState = TIM_OutputNState_Disable;
+    tim_oc.TIM_Pulse       = 2;
+    tim_oc.TIM_OCPolarity = TIM_OCNPolarity_High;
+    tim_oc.TIM_OCNPolarity = TIM_OCNPolarity_Low;
+    tim_oc.TIM_OCIdleState =TIM_OCIdleState_Reset;
+    tim_oc.TIM_OCNIdleState =TIM_OCNIdleState_Set;
 
     tim_oc_init(pwm->tim, pwm->tim_ch, &tim_oc);
     tim_oc_preloadcfg(pwm->tim, pwm->tim_ch, TIM_OCPreload_Enable);
@@ -136,11 +140,28 @@ static void _init_motor_pwm(const pwm_port_t *pwm)
     TIM_Cmd(pwm->tim, ENABLE);
 }
 
+static int duty_to_frequency(int duty)
+{
+/*
+  When duty changes from 1 to 5000
+  Autoreload register value should change from 2000 to 700 (rpm from 4 to 20)
+*/
+  
+  if (duty == 0){
+    return 0;
+  }
+  
+  int ARR_delay_in_us = duty*(-13/50) + 2000;  
+  return ARR_delay_in_us;
+}
+
+
 /**
  @brief Set motor pwm duty.
  @param pwm  - motor pwm port.
  @param duty - motor pwm duty.
  */
+
 static void motor_set_duty(const pwm_port_t *pwm, int duty)
 {
     if (pwm == NULL) {
@@ -151,8 +172,8 @@ static void motor_set_duty(const pwm_port_t *pwm, int duty)
     if (duty > CONFIG_MOTOR_PWM_PERIOD) {
         duty = CONFIG_MOTOR_PWM_PERIOD;
     }
-    tim_set_compare(pwm->tim, pwm->tim_ch, CONFIG_MOTOR_PWM_PERIOD - duty);
-
+    //tim_set_compare(pwm->tim, pwm->tim_ch, CONFIG_MOTOR_PWM_PERIOD - duty);
+    TIM_SetAutoreload(pwm->tim, duty_to_frequency(duty));
     if (duty > 0) {
         pinMode(pwm->port, pwm->pin, GPIO_Mode_AF_PP, GPIO_Speed_50MHz);
     }
@@ -172,8 +193,9 @@ static void _set_walkingmotor_brake(_u8 id, int duty)
 
     /**< Motor driver use 2 pwm(forward, backward). */
     /* Disable forward duty, disable backward duty. */
-    motor_set_duty(&_motor_cfg[id].fw_pwm, duty);
-    motor_set_duty(&_motor_cfg[id].bk_pwm, duty);
+    motor_set_duty(&_motor_cfg[id].port_pwm, 0); // Here I assume the break will happen when setting the duty to zero 
+    //TODO: (check the difference with max)
+    //motor_set_duty(&_motor_cfg[id].bk_pwm, duty);
     return ;
 }
 
@@ -191,12 +213,14 @@ static void _set_walkingmotor_forward(_u8 id, int duty)
         return ;
     }
 
-    /* Enable forward duty. */
-    motor_set_duty(&_motor_cfg[id].fw_pwm, duty);
     /* Disable backward duty. */
-    pwm = &_motor_cfg[id].bk_pwm;
-    pinMode(pwm->port, pwm->pin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
-    pinSet(pwm->port, pwm->pin, Bit_SET);
+    //pwm = &_motor_cfg[id].bk_pwm;
+    //pinMode(pwm->port, pwm->pin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
+    pinSet(_motor_cfg[id].port_dir.port, _motor_cfg[id].port_dir.pin, Bit_SET);
+    //TODO: Check with Bit_SET or reset / check the delay between this enable and set duty
+    /* Enable forward duty. */
+    motor_set_duty(&_motor_cfg[id].port_pwm, duty);
+    
     return ;
 }
 
@@ -215,11 +239,11 @@ static void _set_walkingmotor_backward(_u8 id, int duty)
     }
 
     /* Disable forward duty. */
-    pwm = &_motor_cfg[id].fw_pwm;
-    pinMode(pwm->port, pwm->pin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
-    pinSet(pwm->port, pwm->pin, Bit_SET);
+    //pwm = &_motor_cfg[id].fw_pwm;
+    //pinMode(pwm->port, pwm->pin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
+    pinSet(_motor_cfg[id].port_dir.port, _motor_cfg[id].port_dir.pin, Bit_RESET);
     /* Enable backward duty. */
-    motor_set_duty(&_motor_cfg[id].bk_pwm, duty);
+    motor_set_duty(&_motor_cfg[id].port_pwm, duty);
     return ;
 }
 
@@ -238,14 +262,15 @@ static void _set_walkingmotor_release(_u8 id)
     }
 
     /* Formward pwm output high. */
-    pwm = &_motor_cfg[id].fw_pwm;
+    pwm = &_motor_cfg[id].port_pwm;
     pinMode(pwm->port, pwm->pin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
     pinSet(pwm->port, pwm->pin, Bit_SET);
 
     /* Backward pwm output high. */
-    pwm = &_motor_cfg[id].bk_pwm;
-    pinMode(pwm->port, pwm->pin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
-    pinSet(pwm->port, pwm->pin, Bit_SET);
+//    pwm = &_motor_cfg[id].bk_pwm;
+//    pinMode(pwm->port, pwm->pin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
+//    pinSet(pwm->port, pwm->pin, Bit_SET);
+    
     _delay_us(20);
     return ;
 }
@@ -294,11 +319,13 @@ void init_walkingmotor(void)
     pinSet(MOTO_EN_PORT,  MOTO_EN_PIN, Bit_SET);
 
     for (i = 0; i < _countof(_motor_cfg); i++) {
-        _init_motor_pwm(&_motor_cfg[i].fw_pwm);
-        _init_motor_pwm(&_motor_cfg[i].bk_pwm);
+        _init_motor_pwm(&_motor_cfg[i].port_pwm);
 
         if (_motor_cfg[i].oc_mon.port != NULL) {
             pinMode(_motor_cfg[i].oc_mon.port, _motor_cfg[i].oc_mon.pin, GPIO_Mode_IN_FLOATING, GPIO_Speed_10MHz);
+        }
+        if (_motor_cfg[i].port_dir.port != NULL) {
+            pinMode(_motor_cfg[i].port_dir.port, _motor_cfg[i].port_dir.pin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
         }
     }
 

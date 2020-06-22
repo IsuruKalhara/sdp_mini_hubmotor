@@ -46,19 +46,15 @@
 /**
  @brief Left walking motor hardware configurations.
  */
-#define MOTO_LF_PWM_PORT            GPIOE       /** PE13 is left forward motor pwm. */
-#define MOTO_LF_PWM_PIN             GPIO_Pin_13
+#define MOTO_L_PWM_PORT            GPIOE       /** PE13 is left forward motor pwm. */
+#define MOTO_L_PWM_PIN             GPIO_Pin_13
 
-#define MOTO_LF_PWM_ID              1           /**< PE13 is TIM1_CH4 */
-#define MOTO_LF_PWM_CHN             3
-#define MOTO_LF_PWM                 (GET_TIM(MOTO_LF_PWM_ID))
+#define MOTO_L_PWM_ID              1           /**< PE13 is TIM1_CH4 */
+#define MOTO_L_PWM_CHN             3
+#define MOTO_L_PWM                 (GET_TIM(MOTO_L_PWM_ID))
 
-#define MOTO_LB_PWM_PORT            GPIOE       /** PE14 is left forward motor pwm. */
-#define MOTO_LB_PWM_PIN             GPIO_Pin_14
-
-#define MOTO_LB_PWM_ID              1           /**< PE14 is TIM1_CH3 */
-#define MOTO_LB_PWM_CHN             4
-#define MOTO_LB_PWM                 (GET_TIM(MOTO_LB_PWM_ID))
+#define MOTO_L_DIR_PORT            GPIOE       /** PE14 is left forward motor pwm. */
+#define MOTO_L_DIR_PIN             GPIO_Pin_14
 
 #define MOTO_LI_MONI_PORT           GPIOD       /**< PD5 is left motor overcurrent monitor. */
 #define MOTO_LI_MONI_PIN            GPIO_Pin_5
@@ -66,19 +62,15 @@
 /**
  @brief Right walking motor hardware configurations.
  */
-#define MOTO_RF_PWM_PORT            GPIOB       /** PB9 is right motor pwm. */
-#define MOTO_RF_PWM_PIN             GPIO_Pin_9
+#define MOTO_R_PWM_PORT            GPIOB       /** PB9 is right motor pwm. */
+#define MOTO_R_PWM_PIN             GPIO_Pin_9
 
-#define MOTO_RF_PWM_ID              4
-#define MOTO_RF_PWM_CHN             4           /**< PB9 is TIM4_CH4 */
-#define MOTO_RF_PWM                 (GET_TIM(MOTO_RF_PWM_ID))
+#define MOTO_R_PWM_ID              4
+#define MOTO_R_PWM_CHN             4           /**< PB9 is TIM4_CH4 */
+#define MOTO_R_PWM                 (GET_TIM(MOTO_R_PWM_ID))
 
-#define MOTO_RB_PWM_PORT            GPIOB       /** PB8 is right motor pwm. */
-#define MOTO_RB_PWM_PIN             GPIO_Pin_8
-
-#define MOTO_RB_PWM_ID              4
-#define MOTO_RB_PWM_CHN             3           /**< PB8 is TIM4_CH3 */
-#define MOTO_RB_PWM                 (GET_TIM(MOTO_RB_PWM_ID))
+#define MOTO_R_DIR_PORT            GPIOB       /** PB8 is right motor pwm. */
+#define MOTO_R_DIR_PIN             GPIO_Pin_8
 
 #define MOTO_RI_MONI_PORT           GPIOC       /**< PC5 is right motor overcurrent monitor. */
 #define MOTO_RI_MONI_PIN            GPIO_Pin_5
@@ -113,11 +105,12 @@
  @brief motor driving port configure.
  */
 typedef struct _motor_cfg {
-    pwm_port_t  fw_pwm;         /**< Forward control pwm port. */
-    pwm_port_t  bk_pwm;         /**< Backward control pwm port. */
+    pwm_port_t  port_pwm;       /**< PWM port. */
+    out_port_t  port_dir;       /**< Direction port. */
     in_port_t   oc_mon;         /**< Over-current monitoring port. */
     exti_port_t encoder[CONFIG_MOTOR_ENCODER_NUM]; /**< Motor encoder odometer port. */
     _u16        speed_factor;   /**< Odometer speed factor, in pulse per meter. */
+ 
 } motor_cfg_t;
 
 /**

@@ -56,20 +56,20 @@
 # define USART3_TX_PIN          GPIO_Pin_10
 # define USART3_RX_PIN          GPIO_Pin_11
 
-# define DBG_USART_PORT         USART3_PORT
-# define DBG_USART_ID           USART3_ID
-# define DBG_USART_TX_PIN       USART3_TX_PIN
-# define DBG_USART_RX_PIN       USART3_RX_PIN
+# define DBG_USART_PORT         USART1_PORT
+# define DBG_USART_ID           USART1_ID
+# define DBG_USART_TX_PIN       USART1_TX_PIN
+# define DBG_USART_RX_PIN       USART1_RX_PIN
 # define DBG_IS_SHARED          1
-# define PRINTF_USART_PORT      USART3_ID
+# define PRINTF_USART_PORT      USART1_ID
 
 // CTRL BUS相关
 #define DATAOUT_USART_ID        2
 
-#define USART_CTRLBUS_ID        USART1_ID
-#define USART_CTRLBUS_PORT      USART1_PORT
-#define USART_CTRLBUS_TX_PIN    USART1_TX_PIN
-#define USART_CTRLBUS_RX_PIN    USART1_RX_PIN
+#define USART_CTRLBUS_ID        USART3_ID
+#define USART_CTRLBUS_PORT      USART3_PORT
+#define USART_CTRLBUS_TX_PIN    USART3_TX_PIN
+#define USART_CTRLBUS_RX_PIN    USART3_RX_PIN
 
 #define CTRLBUS_CCMD_PORT       GPIOC
 #define CTRLBUS_CCMD_PIN        GPIO_Pin_9
@@ -124,8 +124,8 @@
 
 //APB2总线上的外设
 
-# define LED_COLOR_PORT             GPIOB
-# define LED_COLOR_PIN              GPIO_Pin_12
+# define LED_COLOR_PORT             GPIOC
+# define LED_COLOR_PIN              GPIO_Pin_8
 
 # define LED_RED_PORT               GPIOB
 # define LED_RED_PIN                GPIO_Pin_12

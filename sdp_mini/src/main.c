@@ -42,11 +42,11 @@
  *    PA6     BATT_DETECT(ADC12_IN6)       PB6                               PC6                                   PD6    MOTO_RF_EN(GPIO)        PE6     
  *    PA7                                  PB7                               PC7     BOTTOM_IR_E(BASIC TIMER)      PD7    MOTO_RB_EN(GPIO)        PE7     SONAR_ECHO2
  *    PA8                                  PB8    MOTO_RB_PWM(TIM4_CH3)      PC8                                   PD8                            PE8     SONAR_ECHO3
- *    PA9     PCIE_CRX(USART1_TX)          PB9    MOTO_RF_PWM(TIM4_CH4)      PC9     PCIE_nCCMD(GPIO)              PD9    MOTO_LB_EN(GPIO)        PE9     SONAR_ECHO4
+ *    PA9     PCIE_CRX(USART1_TX)          PB9    MOTO_R_PWM(TIM4_CH4)      PC9     PCIE_nCCMD(GPIO)              PD9    MOTO_LB_EN(GPIO)        PE9     SONAR_ECHO4
  *    PA10    PCIE_CTX(USART1_RX)          PB10                              PC10    PC10_TX(USART3_TX)            PD10   GROUND_DETECT_R(GPIO)   PE10    SONAR_TRIG1
  *    PA11                                 PB11                              PC11    PC11_RX(USART3_RX)            PD11                           PE11    SONAR_TRIG2
  *    PA12    PCIE_CBUSY(GPIO)             PB12   LED_WS2812(GPIO)           PC12                                  PD12   HOME_IR_R1(TIM4_CH1)    PE12    SONAR_TRIG3
- *    PA13    PROGRAMMER(SWDIO)            PB13   BUMP_DETECT_R(GPIO)        PC13                                  PD13   HOME_IR_R2(TIM4_CH2)    PE13    MOTO_LF_PWM(TIM1_CH3)
+ *    PA13    PROGRAMMER(SWDIO)            PB13   BUMP_DETECT_R(GPIO)        PC13                                  PD13   HOME_IR_R2(TIM4_CH2)    PE13    MOTO_L_PWM(TIM1_CH3)
  *    PA14    PROGRAMMER(SWCLK)            PB14                              PC14                                  PD14   HOME_IR_R3(TIM4_CH3)    PE14    MOTO_LB_PWM(TIM1_CH4)
  *    PA15    BEEP_PWM(TIM2_CH1_ETR)       PB15   CURRENT_SET(GPIO)          PC15                                  PD15                           PE15    SONAR_TRIG4
  *
