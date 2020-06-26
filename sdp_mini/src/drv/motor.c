@@ -106,7 +106,7 @@ static void _init_motor_pwm(const pwm_port_t *pwm)
     if (pwm == NULL || pwm->port == NULL) {
         return ;
     }
-
+    
     pinMode(pwm->port, pwm->pin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
     pinSet(pwm->port,  pwm->pin, Bit_SET);
 
@@ -115,7 +115,7 @@ static void _init_motor_pwm(const pwm_port_t *pwm)
     TIM_Cmd(pwm->tim, DISABLE);
 
     /* Initialize motor control pwm. */
-    tim_base.TIM_Period = 0;//(CONFIG_MOTOR_PWM_PERIOD - 1);
+    tim_base.TIM_Period = 999;//(CONFIG_MOTOR_PWM_PERIOD - 1);
     tim_base.TIM_Prescaler = 72;
     tim_base.TIM_ClockDivision = TIM_CKD_DIV1;
     tim_base.TIM_CounterMode = TIM_CounterMode_Up;
@@ -126,11 +126,11 @@ static void _init_motor_pwm(const pwm_port_t *pwm)
     tim_oc.TIM_OCMode      = TIM_OCMode_PWM1;
     tim_oc.TIM_OutputState = TIM_OutputState_Enable;
     tim_oc.TIM_OutputNState = TIM_OutputNState_Disable;
-    tim_oc.TIM_Pulse       = 2;
+    tim_oc.TIM_Pulse       = 1000;
     tim_oc.TIM_OCPolarity = TIM_OCNPolarity_High;
     tim_oc.TIM_OCNPolarity = TIM_OCNPolarity_Low;
-    tim_oc.TIM_OCIdleState =TIM_OCIdleState_Reset;
-    tim_oc.TIM_OCNIdleState =TIM_OCNIdleState_Set;
+    tim_oc.TIM_OCIdleState = TIM_OCIdleState_Reset;
+    tim_oc.TIM_OCNIdleState = TIM_OCNIdleState_Set;
 
     tim_oc_init(pwm->tim, pwm->tim_ch, &tim_oc);
     tim_oc_preloadcfg(pwm->tim, pwm->tim_ch, TIM_OCPreload_Enable);
@@ -173,7 +173,13 @@ static void motor_set_duty(const pwm_port_t *pwm, int duty)
         duty = CONFIG_MOTOR_PWM_PERIOD;
     }
     //tim_set_compare(pwm->tim, pwm->tim_ch, CONFIG_MOTOR_PWM_PERIOD - duty);
-    TIM_SetAutoreload(pwm->tim, duty_to_frequency(duty));
+    if (duty == 0){
+      TIM_SetAutoreload(pwm->tim, 999);
+    }
+    else{
+      TIM_SetAutoreload(pwm->tim, 5000);//duty_to_frequency(duty));   
+    }
+    //beep_beeper(100, 100, 2);
     if (duty > 0) {
         pinMode(pwm->port, pwm->pin, GPIO_Mode_AF_PP, GPIO_Speed_50MHz);
     }
@@ -193,7 +199,7 @@ static void _set_walkingmotor_brake(_u8 id, int duty)
 
     /**< Motor driver use 2 pwm(forward, backward). */
     /* Disable forward duty, disable backward duty. */
-    motor_set_duty(&_motor_cfg[id].port_pwm, 0); // Here I assume the break will happen when setting the duty to zero 
+    motor_set_duty(&_motor_cfg[id].port_pwm, duty); // Here I assume the break will happen when setting the duty to zero 
     //TODO: (check the difference with max)
     //motor_set_duty(&_motor_cfg[id].bk_pwm, duty);
     return ;
@@ -751,7 +757,7 @@ void stalldetector_heartbeat(void)
                 DBG_OUT("motor %d stall flag set.\r\n", id);
             }
             _stallBitmap |= (1 << id);
-            beep_beeper(4000, 100, 2);
+            beep_beeper(4000, 100, 2); //TODO
         } else {
             /* No stall, clean flag. */
             if (_stallBitmap & (1 << id)) {
