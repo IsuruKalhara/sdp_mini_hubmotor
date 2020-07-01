@@ -84,9 +84,11 @@ static _u32 _encoder2TicksDelta[WALKINGMOTOR_CNT];               //detla时间�
 static _u8 _motorCtrlStates[WALKINGMOTOR_CNT];                  //行走电机方向
 static _s32 _motorSpeedMm[WALKINGMOTOR_CNT];                    //行走电机速度
 
-static const float Kp = 8;                     //PID 比例因子
-static const float Ki = 1.6;                   //PID 积分因子
-static const float Kd = 0.0;                   //PID 微分因子
+static const float Kp = 1;                     //8 PID 比例因子
+static const float Ki = 0;                   //1.6 PID 积分因子
+static const float Kd = 0.0;                   //0 PID 微分因子
+
+static const int wheel_radius = 170;                                //wheel radius
 
 static float speedLastErr[WALKINGMOTOR_CNT];
 static float speedErri[WALKINGMOTOR_CNT];
@@ -115,7 +117,7 @@ static void _init_motor_pwm(const pwm_port_t *pwm)
     TIM_Cmd(pwm->tim, DISABLE);
 
     /* Initialize motor control pwm. */
-    tim_base.TIM_Period = 999;//(CONFIG_MOTOR_PWM_PERIOD - 1);
+    tim_base.TIM_Period = 4;//(CONFIG_MOTOR_PWM_PERIOD - 1);
     tim_base.TIM_Prescaler = 72;
     tim_base.TIM_ClockDivision = TIM_CKD_DIV1;
     tim_base.TIM_CounterMode = TIM_CounterMode_Up;
@@ -126,7 +128,7 @@ static void _init_motor_pwm(const pwm_port_t *pwm)
     tim_oc.TIM_OCMode      = TIM_OCMode_PWM1;
     tim_oc.TIM_OutputState = TIM_OutputState_Enable;
     tim_oc.TIM_OutputNState = TIM_OutputNState_Disable;
-    tim_oc.TIM_Pulse       = 1000;
+    tim_oc.TIM_Pulse       = 5;
     tim_oc.TIM_OCPolarity = TIM_OCNPolarity_High;
     tim_oc.TIM_OCNPolarity = TIM_OCNPolarity_Low;
     tim_oc.TIM_OCIdleState = TIM_OCIdleState_Reset;
@@ -150,8 +152,10 @@ static int duty_to_frequency(int duty)
   if (duty == 0){
     return 0;
   }
-  
-  int ARR_delay_in_us = duty*(-13/50) + 2000;  
+  float wheel_circumference = 2 * 3.14159 * wheel_radius;
+  float rpms = (duty/wheel_circumference)*60;
+  float pulse_frequency = rpms * 4096 / 60;
+  int ARR_delay_in_us = (int) 1000000.0/pulse_frequency; // duty*(-13/50) + 2000; 
   return ARR_delay_in_us;
 }
 
@@ -174,10 +178,10 @@ static void motor_set_duty(const pwm_port_t *pwm, int duty)
     }
     //tim_set_compare(pwm->tim, pwm->tim_ch, CONFIG_MOTOR_PWM_PERIOD - duty);
     if (duty == 0){
-      TIM_SetAutoreload(pwm->tim, 999);
+      TIM_SetAutoreload(pwm->tim, 4);
     }
     else{
-      TIM_SetAutoreload(pwm->tim, 5000);//duty_to_frequency(duty));   
+      TIM_SetAutoreload(pwm->tim, duty_to_frequency(duty));   
     }
     //beep_beeper(100, 100, 2);
     if (duty > 0) {
@@ -222,7 +226,11 @@ static void _set_walkingmotor_forward(_u8 id, int duty)
     /* Disable backward duty. */
     //pwm = &_motor_cfg[id].bk_pwm;
     //pinMode(pwm->port, pwm->pin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
-    pinSet(_motor_cfg[id].port_dir.port, _motor_cfg[id].port_dir.pin, Bit_SET);
+    if(id == 0){
+      pinSet(_motor_cfg[id].port_dir.port, _motor_cfg[id].port_dir.pin, Bit_RESET);
+    }else{
+      pinSet(_motor_cfg[id].port_dir.port, _motor_cfg[id].port_dir.pin, Bit_SET);
+    }
     //TODO: Check with Bit_SET or reset / check the delay between this enable and set duty
     /* Enable forward duty. */
     motor_set_duty(&_motor_cfg[id].port_pwm, duty);
@@ -247,7 +255,11 @@ static void _set_walkingmotor_backward(_u8 id, int duty)
     /* Disable forward duty. */
     //pwm = &_motor_cfg[id].fw_pwm;
     //pinMode(pwm->port, pwm->pin, GPIO_Mode_Out_PP, GPIO_Speed_50MHz);
-    pinSet(_motor_cfg[id].port_dir.port, _motor_cfg[id].port_dir.pin, Bit_RESET);
+    if(id == 0){
+      pinSet(_motor_cfg[id].port_dir.port, _motor_cfg[id].port_dir.pin, Bit_SET);
+    }else{
+      pinSet(_motor_cfg[id].port_dir.port, _motor_cfg[id].port_dir.pin, Bit_RESET);
+    }
     /* Enable backward duty. */
     motor_set_duty(&_motor_cfg[id].port_pwm, duty);
     return ;
