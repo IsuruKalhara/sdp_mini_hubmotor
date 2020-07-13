@@ -96,7 +96,7 @@
 
 /**< This value is calibrate by actual test. */
 #if defined(CONFIG_MOTOR_ENCODER_NUM) && (CONFIG_MOTOR_ENCODER_NUM == 2)
-#define ODOMETER_EST_PULSE_PER_METER  (13500UL*4/5)
+#define ODOMETER_EST_PULSE_PER_METER  1917.3489
 #else
 #define ODOMETER_EST_PULSE_PER_METER  6750UL
 #endif
